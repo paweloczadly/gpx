@@ -3,9 +3,6 @@ name: CD
 on:
   push:
     branches: [ main ]
-    tags:
-      - "v*.*.*"
-      - "v*.*.*-rc.*"
     paths:
       - index.html
       - app.js
@@ -14,6 +11,10 @@ on:
       - gpx/**/*.gpx
       - CNAME
       - .github/workflows/cd.yml
+  create:
+    tags:
+      - "v*.*.*"
+      - "v*.*.*-rc.*"
   workflow_dispatch:
 
 permissions:
