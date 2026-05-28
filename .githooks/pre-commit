@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+set -eu
+
+node scripts/clean-gpx.mjs --staged

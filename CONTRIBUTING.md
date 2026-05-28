@@ -33,6 +33,36 @@ Update README.md when needed.
 
    npm test
 
+## 🧹 GPX Cleanup
+
+- Staged GPX files are automatically cleaned before commit via `.githooks/pre-commit`.
+- Manual cleanup (all GPX files):
+
+  npm run gpx:clean
+
+- Manual cleanup (only staged GPX files):
+
+  npm run gpx:clean:staged
+
+Cleanup removes non-essential `<extensions>` blocks and unused Garmin extension namespaces.
+
+## 🚀 Release Flow
+
+1. Create and push an RC tag manually, for example:
+
+   git tag v0.3.0-rc.1
+   git push origin v0.3.0-rc.1
+
+2. CD deploys automatically on RC tag creation.
+
+3. Promote RC to stable using GitHub Actions workflow `Promote RC to Stable` and input `rc_tag`.
+
+   Note: configure repository secret `RELEASE_PAT` (scopes: `repo`, `workflow`) for reliable tag push from the workflow.
+
+4. The workflow creates stable tag `vX.Y.Z` and GitHub Release.
+
+5. CD deploys automatically on stable tag creation and updates `version.json`.
+
 ## 🚦 Submitting a Pull Request
 
 1. Push your changes to your fork.

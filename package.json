@@ -3,7 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "predev": "node scripts/write-version-json.mjs",
+    "gpx:clean": "node scripts/clean-gpx.mjs",
+    "gpx:clean:staged": "node scripts/clean-gpx.mjs --staged",
     "dev": "python3 -m http.server 8080",
     "test": "node --test"
   }
