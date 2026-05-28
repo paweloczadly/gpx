@@ -28,5 +28,9 @@ export function filterTracksByName(tracks, query) {
     return tracks;
   }
 
-  return tracks.filter((track) => track.name.toLowerCase().includes(normalized));
+  return tracks.filter((track) => {
+    const name = track.name?.toLowerCase() ?? "";
+    const date = track.date?.toLowerCase() ?? "";
+    return name.includes(normalized) || date.includes(normalized);
+  });
 }
