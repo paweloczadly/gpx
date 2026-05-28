@@ -122,6 +122,13 @@ h1 {
   min-width: 0;
 }
 
+.fileTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
 .fileDate {
   display: inline-block;
   padding: 2px 8px;
@@ -129,7 +136,17 @@ h1 {
   background: rgba(15, 118, 110, 0.12);
   color: #0e5f59;
   font-size: 0.8rem;
-  margin-bottom: 6px;
+}
+
+.fileTagClickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.fileTagClickable:hover,
+.fileTagClickable:focus-visible {
+  background: rgba(15, 118, 110, 0.22);
+  outline: none;
 }
 
 .fileName {
