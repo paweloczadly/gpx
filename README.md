@@ -1,7 +1,9 @@
-# repository-template
+# gpx
 
-[![Latest Release](https://img.shields.io/github/v/release/paweloczadly/repository-template?label=release)](https://github.com/paweloczadly/repository-template/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/paweloczadly/gpx?label=release)](https://github.com/paweloczadly/gpx/releases/latest)
 
+
+A minimalist GPX track index with search and direct download, published via GitHub Pages.
 
 ## Table of contents
 
@@ -9,6 +11,16 @@
 * [FAQ](#faq)
 * [License](#license)
 * [Author](#author)
+
+## 🚀 Live
+
+[https://gpx.oczadly.io](https://gpx.oczadly.io)
+
+## 📄 Notes
+
+- GPX naming convention: `YYYY-MM-DD-name.gpx`
+- Files are read from the `gpx/` directory in this repository
+- Repository must be public for browser-side GitHub API access
 
 ## 🤝 Contributing
 

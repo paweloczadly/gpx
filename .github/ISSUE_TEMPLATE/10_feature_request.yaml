@@ -1,5 +1,5 @@
 name: Feature Request
-description: Suggest a feature or enhancement for the plugin.
+description: Suggest a feature or enhancement for the GPX web app.
 labels: [enhancement]
 assignees: []
 
@@ -13,8 +13,32 @@ body:
     id: feature-description
     attributes:
       label: What is the feature you would like to propose?
-      description: Provide a clear and concise description of the feature or enhancement.
+      description: Provide a clear and concise description of the feature or enhancement for the web app.
       placeholder: A clear description of your feature request.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use case
+      description: Describe how this feature would be used while browsing or managing GPX tracks.
+      placeholder: Example: I want to filter tracks by year and sort by newest first.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Area
+      description: Which part of the project does this affect?
+      options:
+        - Frontend (index.html / app.js / styles.css)
+        - GPX data conventions (gpx/ naming or parsing)
+        - Tests (Node test runner)
+        - CI/CD (GitHub Actions / GitHub Pages)
+        - Documentation
+        - Other
     validations:
       required: true
 
@@ -33,6 +57,17 @@ body:
       label: Alternatives considered
       description: Describe any alternative solutions or workarounds you have considered.
       placeholder: Describe alternative approaches you have considered.
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Suggested acceptance criteria (optional)
+      description: Define what should be true when this feature is done.
+      placeholder: |
+        - Search returns matching tracks case-insensitively
+        - Empty results show a clear status message
     validations:
       required: false
 

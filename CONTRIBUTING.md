@@ -1,22 +1,37 @@
-# Contributing to repository-template
+# Contributing to gpx
 
 ## ✍️ Making Changes
 
-✅ Follow existing **code style and idioms**.
+✅ Follow existing code style and naming conventions.
 
 ✅ Ensure your change is:
 
-* **Well-scoped** (one logical change per PR).
-* Includes **unit or functional tests**.
-* Passes **all checks** before submitting a PR.
+* Well-scoped (one logical change per PR).
+* Covered by tests when applicable.
+* Passing all checks before opening a PR.
 
-✅ If adding a new feature:
+✅ For GPX files:
 
-Update `README.md` and `FAQ.md` if needed.
+- Use naming format: `YYYY-MM-DD-name.gpx`
+- Ensure the date is a valid calendar date
 
-✅ If fixing a bug:
+✅ If you change behavior:
 
-Include a test case demonstrating the bug and verifying the fix.
+Update README.md when needed.
+
+## 💻 Local Development
+
+1. Install dependencies (if needed):
+
+   npm install
+
+2. Run the site locally:
+
+   npm run dev
+
+3. Run tests:
+
+   npm test
 
 ## 🚦 Submitting a Pull Request
 
