@@ -19,14 +19,15 @@ test("toTitleCase normalizes separators and capitalizes words", () => {
   assert.equal(toTitleCase("beskid_wyspowy-trasa  dluga"), "Beskid Wyspowy Trasa Dluga");
 });
 
-test("filterTracksByName is case-insensitive and trims query", () => {
+test("filterTracksByName is case-insensitive, trims query, and matches date", () => {
   const tracks = [
-    { name: "beskid-wyspowy" },
-    { name: "tatry-zachodnie" },
-    { name: "Bieszczady" },
+    { name: "beskid-wyspowy", date: "2026-05-28" },
+    { name: "tatry-zachodnie", date: "2026-04-10" },
+    { name: "Bieszczady", date: "2025-12-01" },
   ];
 
-  assert.deepEqual(filterTracksByName(tracks, "  tatry  "), [{ name: "tatry-zachodnie" }]);
-  assert.deepEqual(filterTracksByName(tracks, "BIESZ"), [{ name: "Bieszczady" }]);
+  assert.deepEqual(filterTracksByName(tracks, "  tatry  "), [{ name: "tatry-zachodnie", date: "2026-04-10" }]);
+  assert.deepEqual(filterTracksByName(tracks, "BIESZ"), [{ name: "Bieszczady", date: "2025-12-01" }]);
+  assert.deepEqual(filterTracksByName(tracks, "2026-05"), [{ name: "beskid-wyspowy", date: "2026-05-28" }]);
   assert.deepEqual(filterTracksByName(tracks, ""), tracks);
 });
