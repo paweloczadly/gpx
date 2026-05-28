@@ -1,5 +1,0 @@
-{
-  "extends": [
-    "local>paweloczadly/renovate-config//renovate/01-commons"
-  ]
-}

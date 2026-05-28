@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lista plików GPX</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <p class="eyebrow">Zbiór tras</p>
+        <h1>Pliki GPX</h1>
+        <p class="subtitle">
+          Kliknij wybrany plik, aby go pobrać. Wyszukiwarka filtruje po nazwie po dacie
+          (format: YYYY-MM-DD-nazwa.gpx).
+        </p>
+      </header>
+
+      <section class="panel" aria-label="Wyszukiwanie i lista plików">
+        <label for="searchInput" class="searchLabel">Szukaj po nazwie trasy</label>
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="np. beskid-wyspowy"
+          autocomplete="off"
+        />
+
+        <p id="status" class="status" role="status" aria-live="polite">Ładowanie plików...</p>
+        <ul id="fileList" class="fileList"></ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      © 2025 - <span id="currentYear"></span>
+      <a href="https://oczadly.io/" target="_blank" rel="noopener noreferrer">Paweł Oczadły</a>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
