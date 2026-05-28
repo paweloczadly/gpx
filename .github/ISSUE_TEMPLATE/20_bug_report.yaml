@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a reproducible bug to help improve the plugin.
+description: Report a reproducible bug in the GPX web app.
 labels: [bug]
 assignees: []
 
@@ -24,10 +24,20 @@ body:
       label: Steps to reproduce
       description: Provide clear steps to reproduce the issue.
       placeholder: |
-        1. Run `gradle build ...`
-        2. Observe the output
+        1. Open the app (local or GitHub Pages)
+        2. Type in the search field / load GPX list
+        3. Observe the issue
     validations:
       required: true
+
+  - type: input
+    id: app-url
+    attributes:
+      label: App URL
+      description: Link to where the issue is visible (GitHub Pages URL or local URL).
+      placeholder: https://gpx.oczadly.io or http://localhost:8080
+    validations:
+      required: false
 
   - type: textarea
     id: expected-behavior
@@ -42,11 +52,24 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Please provide your environment details.
+      description: Please provide environment details relevant to browser behavior.
       placeholder: |
-        - OS: [e.g., macOS 14.5, Windows 11]
+        - OS: [e.g., macOS 14.5, Windows 11, Ubuntu 24.04]
+        - Browser: [e.g., Chrome 136, Firefox 127, Safari 17]
+        - Context: [GitHub Pages / Local server]
     validations:
       required: true
+
+  - type: textarea
+    id: gpx-samples
+    attributes:
+      label: Related GPX filenames (if applicable)
+      description: If this issue depends on file naming or parsing, add sample filenames.
+      placeholder: |
+        2026-05-28-beskid-wyspowy.gpx
+        2026-05-29-tatry-zachodnie.gpx
+    validations:
+      required: false
 
   - type: textarea
     id: additional-context

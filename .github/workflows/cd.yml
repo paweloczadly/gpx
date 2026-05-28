@@ -1,0 +1,42 @@
+name: CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - index.html
+      - app.js
+      - gpx-utils.js
+      - styles.css
+      - CNAME
+      - .github/workflows/cd.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v6
+
+      - name: Prepare deploy directory
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .deploy
+          mkdir -p .deploy
+          cp index.html app.js gpx-utils.js styles.css .deploy/
+          if [[ -f CNAME ]]; then
+            cp CNAME .deploy/
+          fi
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./.deploy
+          publish_branch: gh-pages
