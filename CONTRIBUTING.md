@@ -12,7 +12,8 @@
 
 ✅ For GPX files:
 
-- Use naming format: `YYYY-MM-DD-name.gpx`
+- Use naming format: `YYYY-MM-DD-activity-type-name.gpx`
+- Recommended activity types: `bike`, `run`, `trekking`
 - Ensure the date is a valid calendar date
 
 ✅ If you change behavior:
