@@ -3,6 +3,8 @@ name: CD
 on:
   push:
     branches: [ main ]
+    tags:
+      - "v*.*.*-rc.*"
     paths:
       - index.html
       - app.js
