@@ -35,6 +35,29 @@ const BRANCH = getEnvValue("GPX_BRANCH") ?? DEFAULT_BRANCH;
 
 let allTracks = [];
 
+async function downloadFile(downloadUrl, fileName) {
+  const response = await fetch(downloadUrl);
+
+  if (!response.ok) {
+    throw new Error(`Nie udało się pobrać pliku (${response.status}).`);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+
+  try {
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = fileName;
+    link.style.display = "none";
+    document.body.append(link);
+    link.click();
+    link.remove();
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function inferRepoFromGitHubPages() {
   const host = window.location.hostname;
   const pathParts = window.location.pathname.split("/").filter(Boolean);
@@ -85,6 +108,15 @@ function renderList(items) {
     button.download = item.fileName;
     button.textContent = "Pobierz";
     button.setAttribute("aria-label", `Pobierz plik ${item.fileName}`);
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+
+      try {
+        await downloadFile(item.downloadUrl, item.fileName);
+      } catch (error) {
+        statusElement.textContent = `Nie udało się pobrać pliku ${item.fileName}: ${error.message}`;
+      }
+    });
 
     meta.append(dateTag, name);
     li.append(meta, button);
