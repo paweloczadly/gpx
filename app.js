@@ -9,6 +9,7 @@ const DEFAULT_GITHUB_OWNER = "paweloczadly";
 const DEFAULT_GITHUB_REPO = "gpx";
 const DEFAULT_GPX_PATH = "gpx";
 const DEFAULT_BRANCH = "main";
+const DEFAULT_PUBLIC_BASE_URL = "https://gpx.oczadly.io";
 
 function getEnvValue(name) {
   const processEnv = globalThis.process?.env;
@@ -32,6 +33,7 @@ const GITHUB_OWNER = getEnvValue("GPX_GITHUB_OWNER") ?? DEFAULT_GITHUB_OWNER;
 const GITHUB_REPO = getEnvValue("GPX_GITHUB_REPO") ?? DEFAULT_GITHUB_REPO;
 const GPX_PATH = getEnvValue("GPX_GPX_PATH") ?? DEFAULT_GPX_PATH;
 const BRANCH = getEnvValue("GPX_BRANCH") ?? DEFAULT_BRANCH;
+const PUBLIC_BASE_URL = getEnvValue("GPX_PUBLIC_BASE_URL") ?? DEFAULT_PUBLIC_BASE_URL;
 
 let allTracks = [];
 
@@ -41,24 +43,12 @@ function isLocalHost(hostname) {
 
 function buildPublicDownloadUrl(fileName) {
   const encodedFileName = encodeURIComponent(fileName);
-  const { origin, hostname, pathname } = window.location;
+  const baseUrl = isLocalHost(window.location.hostname)
+    ? window.location.origin
+    : PUBLIC_BASE_URL;
+  const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
 
-  if (isLocalHost(hostname)) {
-    return `${origin}/${GPX_PATH}/${encodedFileName}`;
-  }
-
-  if (!hostname.endsWith(".github.io")) {
-    return `${origin}/${encodedFileName}`;
-  }
-
-  const pathParts = pathname.split("/").filter(Boolean);
-  const owner = hostname.replace(/\.github\.io$/, "");
-  const isUserSite = pathParts[0] === `${owner}.github.io`;
-  const repoPathPrefix = pathParts.length > 0 && !isUserSite
-    ? `/${pathParts[0]}`
-    : "";
-
-  return `${origin}${repoPathPrefix}/${encodedFileName}`;
+  return new URL(encodedFileName, normalizedBaseUrl).toString();
 }
 
 async function downloadFile(downloadUrl, fileName) {
