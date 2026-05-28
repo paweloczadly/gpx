@@ -8,6 +8,7 @@ on:
       - app.js
       - gpx-utils.js
       - styles.css
+      - gpx/**/*.gpx
       - CNAME
       - .github/workflows/cd.yml
   workflow_dispatch:
@@ -30,6 +31,7 @@ jobs:
           rm -rf .deploy
           mkdir -p .deploy
           cp index.html app.js gpx-utils.js styles.css .deploy/
+          find gpx -maxdepth 1 -type f -name '*.gpx' -exec cp {} .deploy/ \;
           if [[ -f CNAME ]]; then
             cp CNAME .deploy/
           fi
