@@ -35,6 +35,32 @@ const BRANCH = getEnvValue("GPX_BRANCH") ?? DEFAULT_BRANCH;
 
 let allTracks = [];
 
+function isLocalHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
+function buildPublicDownloadUrl(fileName) {
+  const encodedFileName = encodeURIComponent(fileName);
+  const { origin, hostname, pathname } = window.location;
+
+  if (isLocalHost(hostname)) {
+    return `${origin}/${GPX_PATH}/${encodedFileName}`;
+  }
+
+  if (!hostname.endsWith(".github.io")) {
+    return `${origin}/${encodedFileName}`;
+  }
+
+  const pathParts = pathname.split("/").filter(Boolean);
+  const owner = hostname.replace(/\.github\.io$/, "");
+  const isUserSite = pathParts[0] === `${owner}.github.io`;
+  const repoPathPrefix = pathParts.length > 0 && !isUserSite
+    ? `/${pathParts[0]}`
+    : "";
+
+  return `${origin}${repoPathPrefix}/${encodedFileName}`;
+}
+
 async function downloadFile(downloadUrl, fileName) {
   const response = await fetch(downloadUrl);
 
@@ -104,7 +130,7 @@ function renderList(items) {
 
     const button = document.createElement("a");
     button.className = "downloadBtn";
-    button.href = item.downloadUrl;
+    button.href = item.publicDownloadUrl;
     button.download = item.fileName;
     button.textContent = "Pobierz";
     button.setAttribute("aria-label", `Pobierz plik ${item.fileName}`);
@@ -112,9 +138,19 @@ function renderList(items) {
       event.preventDefault();
 
       try {
-        await downloadFile(item.downloadUrl, item.fileName);
-      } catch (error) {
-        statusElement.textContent = `Nie udało się pobrać pliku ${item.fileName}: ${error.message}`;
+        await downloadFile(item.publicDownloadUrl, item.fileName);
+      } catch (primaryError) {
+        if (item.downloadUrl !== item.publicDownloadUrl) {
+          try {
+            await downloadFile(item.downloadUrl, item.fileName);
+            return;
+          } catch (fallbackError) {
+            statusElement.textContent = `Nie udało się pobrać pliku ${item.fileName}: ${fallbackError.message}`;
+            return;
+          }
+        }
+
+        statusElement.textContent = `Nie udało się pobrać pliku ${item.fileName}: ${primaryError.message}`;
       }
     });
 
@@ -169,6 +205,7 @@ async function loadTracksFromGitHub() {
         date: parsed.date,
         name: parsed.name,
         downloadUrl: entry.download_url,
+        publicDownloadUrl: buildPublicDownloadUrl(entry.name),
       };
     })
     .filter(Boolean)
