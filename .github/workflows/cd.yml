@@ -4,6 +4,7 @@ on:
   push:
     branches: [ main ]
     tags:
+      - "v*.*.*"
       - "v*.*.*-rc.*"
     paths:
       - index.html
@@ -37,7 +38,15 @@ jobs:
           cp index.html app.js gpx-utils.js styles.css .deploy/
           find gpx -maxdepth 1 -type f -name '*.gpx' -exec cp {} .deploy/ \;
 
-          tag="$(git tag --points-at HEAD | head -n 1 || true)"
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            tag="${GITHUB_REF_NAME}"
+          else
+            tag="$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+            if [[ -z "$tag" ]]; then
+              tag="$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]+$' | sort -V | tail -n 1 || true)"
+            fi
+          fi
+
           if [[ -n "$tag" ]]; then
             printf '{"tag":"%s"}\n' "$tag" > .deploy/version.json
           else
