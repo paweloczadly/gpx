@@ -37,6 +37,25 @@ const GPX_PATH = getEnvValue("GPX_GPX_PATH") ?? DEFAULT_GPX_PATH;
 const BRANCH = getEnvValue("GPX_BRANCH") ?? DEFAULT_BRANCH;
 const PUBLIC_BASE_URL = getEnvValue("GPX_PUBLIC_BASE_URL") ?? DEFAULT_PUBLIC_BASE_URL;
 
+const ACTIVITY_META = {
+  bike: { emoji: "🚵", label: "Rower" },
+  rower: { emoji: "🚵", label: "Rower" },
+  run: { emoji: "🏃", label: "Bieganie" },
+  running: { emoji: "🏃", label: "Bieganie" },
+  bieganie: { emoji: "🏃", label: "Bieganie" },
+  trekking: { emoji: "🥾", label: "Trekking" },
+  hike: { emoji: "🥾", label: "Trekking" },
+  hiking: { emoji: "🥾", label: "Trekking" },
+};
+
+function getActivityMeta(activityType) {
+  if (!activityType) {
+    return null;
+  }
+
+  return ACTIVITY_META[activityType.toLowerCase()] ?? null;
+}
+
 let allTracks = [];
 
 function isLocalHost(hostname) {
@@ -93,6 +112,35 @@ function inferRepoFromGitHubPages() {
   return { owner, repo };
 }
 
+function getActivityDisplay(activityType) {
+  const meta = getActivityMeta(activityType);
+
+  if (meta) {
+    return `${meta.emoji} ${meta.label}`;
+  }
+
+  if (!activityType) {
+    return null;
+  }
+
+  return `🏷️ ${toTitleCase(activityType)}`;
+}
+
+function getActivitySearchTerms(activityType) {
+  if (!activityType) {
+    return "";
+  }
+
+  const key = activityType.toLowerCase();
+  const meta = getActivityMeta(activityType);
+
+  if (!meta) {
+    return key;
+  }
+
+  return `${key} ${meta.label.toLowerCase()}`;
+}
+
 function renderList(items) {
   fileListElement.innerHTML = "";
 
@@ -115,6 +163,35 @@ function renderList(items) {
     const dateTag = document.createElement("span");
     dateTag.className = "fileDate";
     dateTag.textContent = item.date;
+
+    const tags = document.createElement("div");
+    tags.className = "fileTags";
+    tags.append(dateTag);
+
+    const activityDisplay = getActivityDisplay(item.activityType);
+    if (activityDisplay) {
+      const activityTag = document.createElement("span");
+      activityTag.className = "fileDate";
+      activityTag.textContent = activityDisplay;
+      activityTag.classList.add("fileTagClickable");
+      activityTag.setAttribute("role", "button");
+      activityTag.setAttribute("tabindex", "0");
+      activityTag.setAttribute("aria-label", `Filtruj po aktywności ${activityDisplay}`);
+      const activityMeta = getActivityMeta(item.activityType);
+      const activityFilterValue = activityMeta?.label ?? toTitleCase(item.activityType);
+      const applyActivityFilter = () => {
+        searchInputElement.value = activityFilterValue;
+        onSearchInput();
+      };
+      activityTag.addEventListener("click", applyActivityFilter);
+      activityTag.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          applyActivityFilter();
+        }
+      });
+      tags.append(activityTag);
+    }
 
     const name = document.createElement("p");
     name.className = "fileName";
@@ -146,7 +223,7 @@ function renderList(items) {
       }
     });
 
-    meta.append(dateTag, name);
+    meta.append(tags, name);
     li.append(meta, button);
     fragment.append(li);
   });
@@ -195,6 +272,8 @@ async function loadTracksFromGitHub() {
       return {
         fileName: entry.name,
         date: parsed.date,
+        activityType: parsed.activityType,
+        activitySearch: getActivitySearchTerms(parsed.activityType),
         name: parsed.name,
         downloadUrl: entry.download_url,
         publicDownloadUrl: buildPublicDownloadUrl(entry.name),

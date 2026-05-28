@@ -18,7 +18,8 @@ A minimalist GPX track index with search and direct download, published via GitH
 
 ## 📄 Notes
 
-- GPX naming convention: `YYYY-MM-DD-name.gpx`
+- GPX naming convention: `YYYY-MM-DD-activity-type-name.gpx`
+- Recommended activity types: `bike`, `run`, `trekking`
 - Files are read from the `gpx/` directory in this repository
 - Repository must be public for browser-side GitHub API access
 

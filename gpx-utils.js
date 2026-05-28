@@ -1,4 +1,14 @@
 const GPX_NAME_PATTERN = /^(\d{4}-\d{2}-\d{2})-(.+)\.gpx$/i;
+const ACTIVITY_TYPES = new Set([
+  "bike",
+  "rower",
+  "run",
+  "running",
+  "bieganie",
+  "trekking",
+  "hike",
+  "hiking",
+]);
 
 export function parseTrackFileName(fileName) {
   const match = fileName.match(GPX_NAME_PATTERN);
@@ -7,9 +17,27 @@ export function parseTrackFileName(fileName) {
     return null;
   }
 
+  const date = match[1];
+  const rest = match[2];
+  const firstHyphenIndex = rest.indexOf("-");
+
+  if (firstHyphenIndex > 0) {
+    const candidateType = rest.slice(0, firstHyphenIndex).toLowerCase();
+    const candidateName = rest.slice(firstHyphenIndex + 1);
+
+    if (ACTIVITY_TYPES.has(candidateType) && candidateName.length > 0) {
+      return {
+        date,
+        activityType: candidateType,
+        name: candidateName,
+      };
+    }
+  }
+
   return {
-    date: match[1],
-    name: match[2],
+    date,
+    activityType: null,
+    name: rest,
   };
 }
 
@@ -31,6 +59,8 @@ export function filterTracksByName(tracks, query) {
   return tracks.filter((track) => {
     const name = track.name?.toLowerCase() ?? "";
     const date = track.date?.toLowerCase() ?? "";
-    return name.includes(normalized) || date.includes(normalized);
+    const activityType = track.activityType?.toLowerCase() ?? "";
+    const activitySearch = track.activitySearch?.toLowerCase() ?? "";
+    return name.includes(normalized) || date.includes(normalized) || activityType.includes(normalized) || activitySearch.includes(normalized);
   });
 }
