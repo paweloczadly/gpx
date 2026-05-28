@@ -8,6 +8,8 @@ on:
       - app.js
       - gpx-utils.js
       - styles.css
+      - favicon.svg
+      - social-preview.png
       - gpx/**/*.gpx
       - CNAME
       - .github/workflows/cd.yml
@@ -36,7 +38,10 @@ jobs:
           set -euo pipefail
           rm -rf .deploy
           mkdir -p .deploy
-          cp index.html app.js gpx-utils.js styles.css .deploy/
+          cp index.html app.js gpx-utils.js styles.css favicon.svg .deploy/
+          if [[ -f social-preview.png ]]; then
+            cp social-preview.png .deploy/
+          fi
           find gpx -maxdepth 1 -type f -name '*.gpx' -exec cp {} .deploy/ \;
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
