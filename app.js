@@ -4,6 +4,8 @@ const fileListElement = document.getElementById("fileList");
 const searchInputElement = document.getElementById("searchInput");
 const statusElement = document.getElementById("status");
 const currentYearElement = document.getElementById("currentYear");
+const appVersionContainerElement = document.getElementById("appVersionContainer");
+const appVersionLinkElement = document.getElementById("appVersionLink");
 
 const DEFAULT_GITHUB_OWNER = "paweloczadly";
 const DEFAULT_GITHUB_REPO = "gpx";
@@ -202,10 +204,39 @@ async function loadTracksFromGitHub() {
     .sort((a, b) => b.fileName.localeCompare(a.fileName));
 }
 
+async function loadAndRenderAppVersion() {
+  if (!appVersionContainerElement || !appVersionLinkElement) {
+    return;
+  }
+
+  try {
+    const response = await fetch("./version.json", { cache: "no-store" });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = await response.json();
+    const tag = typeof data?.tag === "string" ? data.tag.trim() : "";
+
+    if (!tag) {
+      return;
+    }
+
+    appVersionLinkElement.textContent = tag;
+    appVersionLinkElement.href = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tag/${encodeURIComponent(tag)}`;
+    appVersionContainerElement.hidden = false;
+  } catch {
+    // Ignore missing or malformed version metadata in local/dev contexts.
+  }
+}
+
 async function init() {
   if (currentYearElement) {
     currentYearElement.textContent = String(new Date().getFullYear());
   }
+
+  loadAndRenderAppVersion();
 
   searchInputElement.addEventListener("input", onSearchInput);
 
