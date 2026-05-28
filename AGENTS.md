@@ -29,6 +29,7 @@
 	`index.html`, `app.js`, `gpx-utils.js`, `styles.css`, and optional `CNAME`.
 
 ## Agent guidance for edits
+- Prefer minimum effort and maximum value: choose the smallest change that solves the problem while following best practices.
 - Keep the project static; do not introduce frameworks or bundlers unless explicitly requested.
 - Preserve GPX naming validation assumptions in parsing logic and docs.
 - When changing user-visible behavior, update tests in `tests/gpx-utils.test.js` where applicable.

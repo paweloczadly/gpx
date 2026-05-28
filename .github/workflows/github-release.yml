@@ -1,44 +1,85 @@
-name: Create GitHub Release
+name: Promote RC to Stable
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      rc_tag:
+        description: "Existing RC tag to promote (example: v0.2.0-rc.2)"
+        required: true
+        type: string
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  promote:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository with full history
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: Generate changelog
-        id: changelog
+      - name: Validate RC tag and create stable tag
+        id: promote
+        shell: bash
         run: |
-          CURRENT_TAG=${{ github.ref_name }}
-          echo "🚀 New release: $CURRENT_TAG" > release_body.md
-          echo "" >> release_body.md
+          set -euo pipefail
+          RC_TAG="${{ inputs.rc_tag }}"
 
-          TAG_COUNT=$(git tag | wc -l)
-
-          if [ "$TAG_COUNT" -le 1 ]; then
-            echo "Initial release. All commits included." >> release_body.md
-            git log --pretty=format:"- %s (%h)" >> release_body.md
-          else
-            PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p')
-            echo "Changes since $PREV_TAG:" >> release_body.md
-            git log --pretty=format:"- %s (%h)" "$PREV_TAG"..HEAD >> release_body.md
+          if [[ ! "$RC_TAG" =~ ^(v[0-9]+\.[0-9]+\.[0-9]+)-rc\.[0-9]+$ ]]; then
+            echo "Invalid rc_tag '$RC_TAG'. Expected format like v0.2.0-rc.2"
+            exit 1
           fi
 
-      - name: Create GitHub Release
+          if ! git rev-parse "$RC_TAG" >/dev/null 2>&1; then
+            echo "Tag '$RC_TAG' does not exist in repository"
+            exit 1
+          fi
+
+          STABLE_TAG="${BASH_REMATCH[1]}"
+
+          if git rev-parse "$STABLE_TAG" >/dev/null 2>&1; then
+            echo "Stable tag '$STABLE_TAG' already exists"
+            exit 1
+          fi
+
+          PREVIOUS_STABLE_TAG="$(git tag --list 'v*.*.*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+          RC_SHA="$(git rev-list -n 1 "$RC_TAG")"
+
+          git tag "$STABLE_TAG" "$RC_SHA"
+          git push origin "$STABLE_TAG"
+
+          echo "rc_tag=$RC_TAG" >> "$GITHUB_OUTPUT"
+          echo "stable_tag=$STABLE_TAG" >> "$GITHUB_OUTPUT"
+          echo "previous_stable_tag=$PREVIOUS_STABLE_TAG" >> "$GITHUB_OUTPUT"
+          echo "rc_sha=$RC_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Generate changelog
+        shell: bash
+        run: |
+          set -euo pipefail
+          STABLE_TAG="${{ steps.promote.outputs.stable_tag }}"
+          PREVIOUS_STABLE_TAG="${{ steps.promote.outputs.previous_stable_tag }}"
+          RC_SHA="${{ steps.promote.outputs.rc_sha }}"
+
+          echo "Release: $STABLE_TAG" > release_body.md
+          echo "" >> release_body.md
+
+          if [[ -n "$PREVIOUS_STABLE_TAG" ]]; then
+            echo "Changes since $PREVIOUS_STABLE_TAG:" >> release_body.md
+            git log --pretty=format:"- %s (%h)" "$PREVIOUS_STABLE_TAG".."$RC_SHA" >> release_body.md
+          else
+            echo "Initial stable release. Included commits:" >> release_body.md
+            git log --pretty=format:"- %s (%h)" "$RC_SHA" >> release_body.md
+          fi
+
+      - name: Create stable GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ steps.promote.outputs.stable_tag }}
+          target_commitish: ${{ steps.promote.outputs.rc_sha }}
+          name: Release ${{ steps.promote.outputs.stable_tag }}
           body_path: release_body.md
+          prerelease: false

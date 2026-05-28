@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Prepare deploy directory
         shell: bash
@@ -32,6 +34,14 @@ jobs:
           mkdir -p .deploy
           cp index.html app.js gpx-utils.js styles.css .deploy/
           find gpx -maxdepth 1 -type f -name '*.gpx' -exec cp {} .deploy/ \;
+
+          tag="$(git tag --points-at HEAD | head -n 1 || true)"
+          if [[ -n "$tag" ]]; then
+            printf '{"tag":"%s"}\n' "$tag" > .deploy/version.json
+          else
+            printf '{"tag":null}\n' > .deploy/version.json
+          fi
+
           if [[ -f CNAME ]]; then
             cp CNAME .deploy/
           fi
