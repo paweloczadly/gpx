@@ -1,4 +1,5 @@
 import { filterTracksByName, parseTrackFileName, toTitleCase } from "./gpx-utils.js";
+import { buildShareTargets, createShareData, shouldUseNativeShare } from "./share-utils.js";
 
 const fileListElement = document.getElementById("fileList");
 const searchInputElement = document.getElementById("searchInput");
@@ -36,6 +37,8 @@ const GITHUB_REPO = getEnvValue("GPX_GITHUB_REPO") ?? DEFAULT_GITHUB_REPO;
 const GPX_PATH = getEnvValue("GPX_GPX_PATH") ?? DEFAULT_GPX_PATH;
 const BRANCH = getEnvValue("GPX_BRANCH") ?? DEFAULT_BRANCH;
 const PUBLIC_BASE_URL = getEnvValue("GPX_PUBLIC_BASE_URL") ?? DEFAULT_PUBLIC_BASE_URL;
+const DOWNLOAD_ICON_SVG = "<svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><path d='M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z' fill='currentColor'/></svg>";
+const SHARE_ICON_SVG = "<svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><path d='M18 16a3 3 0 0 0-2.37 1.16L9.91 13.8a3.2 3.2 0 0 0 0-3.6l5.72-3.36A3 3 0 1 0 15 5a3 3 0 0 0 .07.64L9.36 9a3 3 0 1 0 0 6l5.71 3.36A3 3 0 1 0 18 16Z' fill='currentColor'/></svg>";
 
 const ACTIVITY_META = {
   bike: { emoji: "🚵", label: "Rower" },
@@ -57,6 +60,8 @@ function getActivityMeta(activityType) {
 }
 
 let allTracks = [];
+let activeShareMenu = null;
+let activeShareOwner = null;
 
 function isLocalHost(hostname) {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
@@ -92,6 +97,102 @@ async function downloadFile(downloadUrl, fileName) {
     link.remove();
   } finally {
     URL.revokeObjectURL(objectUrl);
+  }
+}
+
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const input = document.createElement("textarea");
+  input.value = text;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.append(input);
+  input.select();
+  document.execCommand("copy");
+  input.remove();
+}
+
+async function shareTrack(track) {
+  const shareData = createShareData(track);
+
+  if (shouldUseNativeShare(navigator)) {
+    await navigator.share(shareData);
+    return "Udostępniono link.";
+  }
+
+  return null;
+}
+
+function closeShareMenu() {
+  if (activeShareMenu) {
+    activeShareMenu.remove();
+    activeShareMenu = null;
+  }
+
+  if (activeShareOwner) {
+    activeShareOwner.classList.remove("fileItemShareOpen");
+    activeShareOwner = null;
+  }
+}
+
+function openShareMenu(track, anchorButton) {
+  closeShareMenu();
+
+  const menu = document.createElement("div");
+  menu.className = "shareMenu";
+  menu.setAttribute("role", "dialog");
+  menu.setAttribute("aria-label", `Udostępnij plik ${track.fileName}`);
+
+  for (const target of buildShareTargets(track)) {
+    if (target.action === "copy") {
+      const copyButton = document.createElement("button");
+      copyButton.type = "button";
+      copyButton.className = "shareMenuItem";
+      copyButton.textContent = target.label;
+      copyButton.addEventListener("click", async () => {
+        try {
+          await copyTextToClipboard(track.publicDownloadUrl);
+          statusElement.textContent = "Skopiowano link do schowka.";
+        } catch (error) {
+          statusElement.textContent = `Nie udało się skopiować linku: ${error.message}`;
+        }
+        closeShareMenu();
+      });
+      menu.append(copyButton);
+      continue;
+    }
+
+    const link = document.createElement("a");
+    link.className = "shareMenuItem";
+    link.href = target.href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.textContent = target.label;
+    menu.append(link);
+  }
+
+  const li = anchorButton.closest("li");
+  if (li) {
+    li.classList.add("fileItemShareOpen");
+    li.append(menu);
+    activeShareMenu = menu;
+    activeShareOwner = li;
+
+    const closeOnOutsideClick = (event) => {
+      if (!menu.contains(event.target) && event.target !== anchorButton) {
+        closeShareMenu();
+        document.removeEventListener("click", closeOnOutsideClick, true);
+      }
+    };
+
+    window.setTimeout(() => {
+      document.addEventListener("click", closeOnOutsideClick, true);
+    }, 0);
   }
 }
 
@@ -197,13 +298,16 @@ function renderList(items) {
     name.className = "fileName";
     name.textContent = toTitleCase(item.name);
 
-    const button = document.createElement("a");
-    button.className = "downloadBtn";
-    button.href = item.publicDownloadUrl;
-    button.download = item.fileName;
-    button.textContent = "Pobierz";
-    button.setAttribute("aria-label", `Pobierz plik ${item.fileName}`);
-    button.addEventListener("click", async (event) => {
+    const actions = document.createElement("div");
+    actions.className = "fileActions";
+
+    const downloadButton = document.createElement("button");
+    downloadButton.type = "button";
+    downloadButton.className = "actionBtn actionBtnPrimary";
+    downloadButton.innerHTML = DOWNLOAD_ICON_SVG;
+    downloadButton.title = "Pobierz";
+    downloadButton.setAttribute("aria-label", `Pobierz plik ${item.fileName}`);
+    downloadButton.addEventListener("click", async (event) => {
       event.preventDefault();
 
       try {
@@ -223,8 +327,33 @@ function renderList(items) {
       }
     });
 
+    const shareButton = document.createElement("button");
+    shareButton.type = "button";
+    shareButton.className = "actionBtn actionBtnSecondary";
+    shareButton.innerHTML = SHARE_ICON_SVG;
+    shareButton.title = "Udostępnij";
+    shareButton.setAttribute("aria-label", `Udostępnij plik ${item.fileName}`);
+    shareButton.addEventListener("click", async (event) => {
+      event.preventDefault();
+
+      try {
+        const message = await shareTrack(item);
+        if (message) {
+          statusElement.textContent = message;
+          closeShareMenu();
+          return;
+        }
+
+        openShareMenu(item, shareButton);
+      } catch (error) {
+        statusElement.textContent = `Nie udało się udostępnić pliku ${item.fileName}: ${error.message}`;
+      }
+    });
+
+    actions.append(downloadButton, shareButton);
+
     meta.append(tags, name);
-    li.append(meta, button);
+    li.append(meta, actions);
     fragment.append(li);
   });
 
