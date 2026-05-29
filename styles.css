@@ -107,6 +107,8 @@ h1 {
 }
 
 .fileItem {
+  position: relative;
+  z-index: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -116,6 +118,10 @@ h1 {
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.65);
   animation: fadeInUp 0.25s ease-out both;
+}
+
+.fileItemShareOpen {
+  z-index: 40;
 }
 
 .fileMeta {
@@ -155,21 +161,88 @@ h1 {
   overflow-wrap: anywhere;
 }
 
-.downloadBtn {
-  text-decoration: none;
+.fileActions {
+  display: flex;
+  gap: 8px;
   flex-shrink: 0;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
-  transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
-.downloadBtn:hover,
-.downloadBtn:focus-visible {
-  background: var(--accent-2);
+.actionBtn {
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  background: #fff;
+  color: var(--accent-2);
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+
+.actionBtn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.actionBtnPrimary {
+  background: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 75%, black);
+  color: #fff;
+}
+
+.actionBtn:hover,
+.actionBtn:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 45%, #fff);
   transform: translateY(-1px);
+  outline: none;
+}
+
+.actionBtnPrimary:hover,
+.actionBtnPrimary:focus-visible {
+  background: var(--accent-2);
+}
+
+.actionBtnSecondary:hover,
+.actionBtnSecondary:focus-visible {
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.shareMenu {
+  position: absolute;
+  right: 14px;
+  top: calc(100% - 4px);
+  z-index: 20;
+  min-width: 180px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
+}
+
+.shareMenuItem {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+  text-align: left;
+  padding: 8px 10px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.shareMenuItem:hover,
+.shareMenuItem:focus-visible {
+  background: rgba(15, 118, 110, 0.08);
+  border-color: color-mix(in srgb, var(--accent) 45%, #fff);
+  outline: none;
 }
 
 .footer {
@@ -201,8 +274,18 @@ h1 {
     align-items: flex-start;
   }
 
-  .downloadBtn {
+  .fileActions {
     width: 100%;
-    text-align: center;
+  }
+
+  .shareMenu {
+    left: 14px;
+    right: 14px;
+    top: calc(100% - 2px);
+    min-width: unset;
+  }
+
+  .actionBtn {
+    flex: 1;
   }
 }
