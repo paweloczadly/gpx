@@ -6,6 +6,7 @@ on:
     paths:
       - index.html
       - app.js
+      - share-utils.js
       - gpx-utils.js
       - styles.css
       - favicon.svg
@@ -38,7 +39,7 @@ jobs:
           set -euo pipefail
           rm -rf .deploy
           mkdir -p .deploy
-          cp index.html app.js gpx-utils.js styles.css favicon.svg .deploy/
+          cp index.html app.js share-utils.js gpx-utils.js styles.css favicon.svg .deploy/
           if [[ -f social-preview.png ]]; then
             cp social-preview.png .deploy/
           fi
