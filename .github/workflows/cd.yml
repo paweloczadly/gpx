@@ -9,6 +9,7 @@ on:
       - share-utils.js
       - gpx-utils.js
       - styles.css
+      - scripts/write-tracks-json.mjs
       - favicon.svg
       - social-preview.png
       - gpx/**/*.gpx
@@ -40,10 +41,11 @@ jobs:
           rm -rf .deploy
           mkdir -p .deploy
           cp index.html app.js share-utils.js gpx-utils.js styles.css favicon.svg .deploy/
+          node scripts/write-tracks-json.mjs --input-dir gpx --output-file .deploy/tracks.json
           if [[ -f social-preview.png ]]; then
             cp social-preview.png .deploy/
           fi
-          find gpx -maxdepth 1 -type f -name '*.gpx' -exec cp {} .deploy/ \;
+          cp -r gpx .deploy/
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
             tag="${GITHUB_REF_NAME}"

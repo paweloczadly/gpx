@@ -8,35 +8,9 @@ const currentYearElement = document.getElementById("currentYear");
 const appVersionContainerElement = document.getElementById("appVersionContainer");
 const appVersionLinkElement = document.getElementById("appVersionLink");
 
-const DEFAULT_GITHUB_OWNER = "paweloczadly";
-const DEFAULT_GITHUB_REPO = "gpx";
-const DEFAULT_GPX_PATH = "gpx";
-const DEFAULT_BRANCH = "main";
-const DEFAULT_PUBLIC_BASE_URL = "https://gpx.oczadly.io";
-
-function getEnvValue(name) {
-  const processEnv = globalThis.process?.env;
-  const importMetaEnv = import.meta?.env;
-  const windowEnv = typeof window !== "undefined" ? window : undefined;
-
-  const value =
-    processEnv?.[name] ??
-    importMetaEnv?.[name] ??
-    windowEnv?.[name];
-
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : undefined;
-}
-
-const GITHUB_OWNER = getEnvValue("GPX_GITHUB_OWNER") ?? DEFAULT_GITHUB_OWNER;
-const GITHUB_REPO = getEnvValue("GPX_GITHUB_REPO") ?? DEFAULT_GITHUB_REPO;
-const GPX_PATH = getEnvValue("GPX_GPX_PATH") ?? DEFAULT_GPX_PATH;
-const BRANCH = getEnvValue("GPX_BRANCH") ?? DEFAULT_BRANCH;
-const PUBLIC_BASE_URL = getEnvValue("GPX_PUBLIC_BASE_URL") ?? DEFAULT_PUBLIC_BASE_URL;
+const REPO_FALLBACK_OWNER = "paweloczadly";
+const REPO_FALLBACK_NAME = "gpx";
+const GPX_PATH = "gpx";
 const DOWNLOAD_ICON_SVG = "<svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><path d='M12 3a1 1 0 0 1 1 1v9.59l2.3-2.3a1 1 0 1 1 1.4 1.42l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 1 1 1.4-1.42l2.3 2.3V4a1 1 0 0 1 1-1ZM5 19a1 1 0 0 1 1-1h12a1 1 0 1 1 0 2H6a1 1 0 0 1-1-1Z' fill='currentColor'/></svg>";
 const SHARE_ICON_SVG = "<svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'><path d='M18 16a3 3 0 0 0-2.37 1.16L9.91 13.8a3.2 3.2 0 0 0 0-3.6l5.72-3.36A3 3 0 1 0 15 5a3 3 0 0 0 .07.64L9.36 9a3 3 0 1 0 0 6l5.71 3.36A3 3 0 1 0 18 16Z' fill='currentColor'/></svg>";
 
@@ -63,18 +37,10 @@ let allTracks = [];
 let activeShareMenu = null;
 let activeShareOwner = null;
 
-function isLocalHost(hostname) {
-  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
-}
-
 function buildPublicDownloadUrl(fileName) {
   const encodedFileName = encodeURIComponent(fileName);
-  const baseUrl = isLocalHost(window.location.hostname)
-    ? window.location.origin
-    : PUBLIC_BASE_URL;
-  const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-
-  return new URL(encodedFileName, normalizedBaseUrl).toString();
+  const relativePath = `${GPX_PATH}/${encodedFileName}`;
+  return new URL(relativePath, window.location.href).toString();
 }
 
 async function downloadFile(downloadUrl, fileName) {
@@ -202,8 +168,8 @@ function inferRepoFromGitHubPages() {
 
   if (!host.endsWith(".github.io")) {
     return {
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
+      owner: REPO_FALLBACK_OWNER,
+      repo: REPO_FALLBACK_NAME,
     };
   }
 
@@ -365,47 +331,33 @@ function onSearchInput() {
   renderList(filtered);
 }
 
-async function loadTracksFromGitHub() {
-  const repoInfo = inferRepoFromGitHubPages();
-
-  if (!repoInfo) {
-    throw new Error(
-      "Nie udało się ustalić repozytorium GitHub. Sprawdź konfigurację GPX_GITHUB_OWNER i GPX_GITHUB_REPO.",
-    );
-  }
-
-  const url = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contents/${GPX_PATH}?ref=${BRANCH}`;
-  const response = await fetch(url);
+async function loadTracksFromManifest() {
+  const response = await fetch("./tracks.json", { cache: "no-store" });
 
   if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error(
-        "upewnij się, że repozytorium na GitHubie jest publiczne.",
-      );
-    }
-
-    throw new Error(`Błąd GitHub API: ${response.status}`);
+    throw new Error(`Nie udało się wczytać manifestu tracks.json (${response.status}).`);
   }
 
-  const entries = await response.json();
+  const manifest = await response.json();
+  const files = Array.isArray(manifest?.files) ? manifest.files : [];
 
-  return entries
-    .filter((entry) => entry.type === "file" && entry.name.toLowerCase().endsWith(".gpx"))
-    .map((entry) => {
-      const parsed = parseTrackFileName(entry.name);
+  return files
+    .filter((fileName) => typeof fileName === "string" && fileName.toLowerCase().endsWith(".gpx"))
+    .map((fileName) => {
+      const parsed = parseTrackFileName(fileName);
 
       if (!parsed) {
         return null;
       }
 
       return {
-        fileName: entry.name,
+        fileName,
         date: parsed.date,
         activityType: parsed.activityType,
         activitySearch: getActivitySearchTerms(parsed.activityType),
         name: parsed.name,
-        downloadUrl: entry.download_url,
-        publicDownloadUrl: buildPublicDownloadUrl(entry.name),
+        downloadUrl: buildPublicDownloadUrl(fileName),
+        publicDownloadUrl: buildPublicDownloadUrl(fileName),
       };
     })
     .filter(Boolean)
@@ -432,7 +384,8 @@ async function loadAndRenderAppVersion() {
     }
 
     appVersionLinkElement.textContent = tag;
-    appVersionLinkElement.href = `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/tag/${encodeURIComponent(tag)}`;
+    const repoInfo = inferRepoFromGitHubPages();
+    appVersionLinkElement.href = `https://github.com/${repoInfo.owner}/${repoInfo.repo}/releases/tag/${encodeURIComponent(tag)}`;
     appVersionContainerElement.hidden = false;
   } catch {
     // Ignore missing or malformed version metadata in local/dev contexts.
@@ -449,7 +402,7 @@ async function init() {
   searchInputElement.addEventListener("input", onSearchInput);
 
   try {
-    allTracks = await loadTracksFromGitHub();
+    allTracks = await loadTracksFromManifest();
 
     if (allTracks.length === 0) {
       statusElement.textContent =
