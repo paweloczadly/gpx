@@ -1,5 +1,5 @@
 {
-  "name": "gpx-gpx-list",
+  "name": "gpx",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,6 +9,11 @@
     "gpx:clean": "node scripts/clean-gpx.mjs",
     "gpx:clean:staged": "node scripts/clean-gpx.mjs --staged",
     "dev": "python3 -m http.server 8080",
-    "test": "node --test"
+    "test": "mocha \"tests/**/*.test.js\""
+  },
+  "devDependencies": {
+    "@gradle-tech/develocity-agent": "^4.0.0",
+    "@gradle-tech/develocity-agent-loader": "^1.0.0",
+    "mocha": "^11.7.6"
   }
 }
