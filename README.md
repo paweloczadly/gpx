@@ -7,6 +7,8 @@ A minimalist GPX track index with search and direct download, published via GitH
 
 ## Table of contents
 
+* [Live](#-live)
+* [Notes](#-notes)
 * [Contributing](#contributing)
 * [FAQ](#faq)
 * [License](#license)
@@ -30,13 +32,13 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 > [!IMPORTANT]
 > Please note that this project is developed and maintained in **focused time blocks** to ensure quality. Contributions and issues will be addressed on a **best-effort basis**, depending on ongoing priorities.
 
-## 📄 License
-
-MIT License – see [LICENSE](LICENSE) for details.
-
 ## 🙋 FAQ
 
 See [FAQ.md](FAQ.md) for answers to common questions.
+
+## 📄 License
+
+MIT License. See [LICENSE](LICENSE) for details.
 
 ## 👤 Author
 
