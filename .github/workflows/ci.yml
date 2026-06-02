@@ -34,4 +34,10 @@ jobs:
         run: npm install
 
       - name: Run tests
+        env:
+          CI: "true"
+          NODE_OPTIONS: --require @gradle-tech/develocity-agent/preload
+          DEVELOCITY_URL: https://community.develocity.cloud/
+          DEVELOCITY_PROJECT_ID: paweloczadly
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: npm test
