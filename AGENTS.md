@@ -34,7 +34,6 @@
 - Preserve GPX naming validation assumptions in parsing logic and docs.
 - When changing user-visible behavior, update tests in `tests/gpx-utils.test.js` where applicable.
 - Keep documentation aligned with real workflows (`README.md`, `FAQ.md`, `CONTRIBUTING.md`).
-- Do not reintroduce Develocity integration unless explicitly requested.
 
 ## Documentation style
 - Prefer concise, practical instructions.
